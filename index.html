@@ -57,13 +57,53 @@ footer{text-align:center;color:#77849d;font-size:12px;margin-top:25px}
   </footer>
 </main>
 <script>
-function askAI(){
-  const q=document.getElementById("question").value.trim();
-  const a=document.getElementById("answer");
-  if(!q){a.textContent="Please enter a question.";return;}
-  a.textContent=
-    "Your interface is working! Your message: "+q+
-    "\n\nAI model connection is not configured yet.";
+const WORKER_URL = "https://aarya-ai-backend.aaryashreyansh618.workers.dev/";
+
+async function askAI() {
+  const question = document.getElementById("question");
+  const answer = document.getElementById("answer");
+  let message = question.value.trim();
+
+  if (!message) {
+    answer.textContent = "पहले अपना सवाल लिखो।";
+    return;
+  }
+
+  let mode = "chat";
+
+  if (message.toLowerCase().startsWith("/research ")) {
+    mode = "research";
+    message = message.slice(10).trim();
+  } else if (message.toLowerCase().startsWith("/code ")) {
+    mode = "code";
+    message = message.slice(6).trim();
+  }
+
+  answer.textContent = "🤖 AARYA AI जवाब तैयार कर रहा है...";
+
+  try {
+    const response = await fetch(WORKER_URL, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({
+        message: message,
+        mode: mode
+      })
+    });
+
+    const data = await response.json();
+
+    if (!response.ok) {
+      throw new Error(data.error || "Request failed");
+    }
+
+    answer.textContent = data.answer || "कोई जवाब नहीं मिला।";
+  } catch (error) {
+    answer.textContent =
+      "कनेक्शन में समस्या हुई: " + error.message;
+  }
 }
 </script>
 </body>
