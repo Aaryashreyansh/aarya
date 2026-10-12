@@ -1,0 +1,70 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>AARYA AI</title>
+<style>
+*{box-sizing:border-box}
+body{
+  margin:0;background:#0b1020;color:#f4f6ff;
+  font-family:system-ui,Arial,sans-serif;
+  min-height:100vh;padding:20px
+}
+header{max-width:700px;margin:auto}
+.logo{color:#a8baff;font-size:25px;font-weight:800}
+.tag{color:#9ba8c1;font-size:13px}
+main{max-width:700px;margin:65px auto 0}
+h1{font-size:38px;line-height:1.15}
+h1 span{color:#91aaff}
+p{color:#aab6cc}
+.card{
+  border:1px solid #293650;background:#121b2e;
+  border-radius:16px;padding:16px;margin-top:25px
+}
+textarea{
+  width:100%;min-height:100px;resize:vertical;
+  background:#0b1020;color:white;border:1px solid #34415d;
+  border-radius:10px;padding:13px;font:inherit
+}
+button{
+  background:#91aaff;color:#0b1020;border:0;
+  padding:12px 20px;border-radius:10px;
+  font-weight:700;margin-top:12px
+}
+#answer{white-space:pre-wrap;overflow-wrap:anywhere}
+footer{text-align:center;color:#77849d;font-size:12px;margin-top:25px}
+</style>
+</head>
+<body>
+<header>
+  <div class="logo">✳ AARYA AI</div>
+  <div class="tag">YOUR PERSONAL AI WORKSPACE</div>
+</header>
+<main>
+  <p>WELCOME TO YOUR AI</p>
+  <h1>Think freely.<br><span>Build anything.</span></h1>
+  <p>Your personal space for AI, research and coding.</p>
+  <section class="card">
+    <h3>💬 AI Chat</h3>
+    <textarea id="question" placeholder="Ask AARYA AI anything..."></textarea>
+    <button onclick="askAI()">Send ↑</button>
+    <div id="answer"></div>
+  </section>
+  <footer>
+    AARYA AI · Built with curiosity 🚀
+  </footer>
+</main>
+<script>
+function askAI(){
+  const q=document.getElementById("question").value.trim();
+  const a=document.getElementById("answer");
+  if(!q){a.textContent="Please enter a question.";return;}
+  a.textContent=
+    "Your interface is working! Your message: "+q+
+    "\n\nAI model connection is not configured yet.";
+}
+</script>
+</body>
+</html>
