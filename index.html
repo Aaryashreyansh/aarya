@@ -106,5 +106,145 @@ async function askAI() {
   }
 }
 </script>
+<!-- AARYA AI: Extra Tools -->
+<div id="aarya-tools" style="margin:16px 0;display:flex;gap:8px;flex-wrap:wrap">
+  <button type="button" id="aarya-copy">📋 Copy Answer</button>
+  <button type="button" id="aarya-speak">🔊 सुनें</button>
+  <button type="button" id="aarya-mic">🎙️ बोलकर पूछें</button>
+  <button type="button" id="aarya-pdf-btn">📄 PDF चुनें</button>
+  <input id="aarya-pdf" type="file" accept="application/pdf" hidden>
+</div>
+
+<p id="aarya-status" aria-live="polite"></p>
+
+<script>
+(() => {
+  const question = document.getElementById("question");
+  const answer = document.getElementById("answer");
+  const status = document.getElementById("aarya-status");
+
+  if (!question || !answer) {
+    status.textContent =
+      "Chat input नहीं मिला। मौजूदा question और answer IDs जाँचें।";
+    return;
+  }
+
+  document.getElementById("aarya-copy").onclick = async () => {
+    try {
+      await navigator.clipboard.writeText(answer.innerText);
+      status.textContent = "जवाब कॉपी हो गया!";
+    } catch {
+      status.textContent =
+        "Copy नहीं हुआ। जवाब को long-press करके कॉपी करो।";
+    }
+  };
+
+  document.getElementById("aarya-speak").onclick = () => {
+    if (!("speechSynthesis" in window)) {
+      status.textContent = "इस ब्राउज़र में आवाज़ का सपोर्ट नहीं है।";
+      return;
+    }
+
+    speechSynthesis.cancel();
+    const speech = new SpeechSynthesisUtterance(answer.innerText);
+    speech.lang = /[\u0900-\u097F]/.test(answer.innerText)
+      ? "hi-IN" : "en-IN";
+    speechSynthesis.speak(speech);
+  };
+
+  document.getElementById("aarya-mic").onclick = () => {
+    const Recognition =
+      window.SpeechRecognition || window.webkitSpeechRecognition;
+
+    if (!Recognition) {
+      status.textContent =
+        "Voice Input उपलब्ध नहीं है। Chrome में कोशिश करो।";
+      return;
+    }
+
+    const recognition = new Recognition();
+    recognition.lang = "hi-IN";
+    recognition.interimResults = false;
+
+    recognition.onstart = () => {
+      status.textContent = "सुन रहा हूँ... अब बोलो।";
+    };
+
+    recognition.onresult = event => {
+      question.value = event.results[0][0].transcript;
+      status.textContent =
+        "सवाल लिख दिया गया है। अब Send दबाओ।";
+    };
+
+    recognition.onerror = () => {
+      status.textContent =
+        "माइक काम नहीं किया। Microphone permission जाँचो।";
+    };
+
+    recognition.start();
+  };
+
+  document.getElementById("aarya-pdf-btn").onclick = () => {
+    document.getElementById("aarya-pdf").click();
+  };
+
+  document.getElementById("aarya-pdf").onchange = async event => {
+    const file = event.target.files[0];
+    if (!file) return;
+
+    if (file.size > 5 * 1024 * 1024) {
+      status.textContent = "अभी 5 MB से छोटी PDF चुनो।";
+      return;
+    }
+
+    status.textContent = "PDF पढ़ने की तैयारी हो रही है...";
+
+    try {
+      if (!window.pdfjsLib) {
+        await new Promise((resolve, reject) => {
+          const script = document.createElement("script");
+          script.src =
+            "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js";
+          script.onload = resolve;
+          script.onerror = reject;
+          document.head.appendChild(script);
+        });
+
+        pdfjsLib.GlobalWorkerOptions.workerSrc =
+          "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js";
+      }
+
+      const bytes = new Uint8Array(await file.arrayBuffer());
+      const pdf = await pdfjsLib.getDocument({ data: bytes }).promise;
+      let text = "";
+
+      const pages = Math.min(pdf.numPages, 10);
+
+      for (let pageNo = 1; pageNo <= pages; pageNo++) {
+        const page = await pdf.getPage(pageNo);
+        const content = await page.getTextContent();
+        text += content.items.map(item => item.str).join(" ") + "\n";
+      }
+
+      if (!text.trim()) {
+        status.textContent =
+          "PDF में selectable text नहीं मिला। यह scanned PDF हो सकती है।";
+        return;
+      }
+
+      question.value =
+        "इस PDF को हिंदी में समझाओ और मुख्य बिंदु बताओ:\n\n" +
+        text.slice(0, 10000);
+
+      status.textContent =
+        "PDF का टेक्स्ट तैयार है। अब Send दबाकर सवाल पूछो।";
+    } catch {
+      status.textContent =
+        "PDF नहीं पढ़ी जा सकी। दूसरी PDF से कोशिश करो।";
+    }
+  };
+})();
+</script>
+  
 </body>
 </html>
